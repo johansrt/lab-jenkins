@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
@@ -10,7 +15,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/heroku/nodejs-getting-started'
+                git branch: 'main', url: 'https://github.com/heroku/node-js-getting-started.git'
             }
         }
 
@@ -28,9 +33,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh "docker build -t ${IMAGE_NAME}:latest ."
-                }
+                sh "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
 
@@ -45,9 +48,7 @@ pipeline {
 
         stage('Deploy Locally') {
             steps {
-                script {
-                    sh "docker run -d -p 8081:3000 --name node-demo ${IMAGE_NAME}:latest"
-                }
+                sh "docker run -d -p 8081:3000 --name node-demo ${IMAGE_NAME}:latest || echo 'Container may already exist'"
             }
         }
     }
@@ -58,3 +59,4 @@ pipeline {
         }
     }
 }
+
